@@ -52,19 +52,35 @@ if prompt := st.chat_input("Type your coffee question here..."):
     st.session_state.chat_history.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
-        
-    chat_context = [
-        {"role": msg["role"], "content": msg["content"]}
-        for msg in st.session_state.chat_history
-        if msg["role"] in ["user", "assistant"]
-    ][-4:]  # Only the last 4 messages
 
-    # Payload with limited memory context
+    # chat_context = [
+    #     {"role": msg["role"], "content": msg["content"]}
+    #     for msg in st.session_state.chat_history
+    #     if msg["role"] in ["user", "assistant"]
+    # ][-4:]  # Only the last 4 messages
+
+    # # Payload with limited memory context
+    # payload = {
+    #     "input": {
+    #         "messages": chat_context
+    #     }
+    # }
+    # Extract last 3 user messages (if any) + current prompt
+    previous_user_prompts = [
+        msg["content"] for msg in st.session_state.chat_history
+        if msg["role"] == "user"
+    ][-3:]  # Only last 3 previous user messages
+
+    # Append the current prompt
+    chat_context = previous_user_prompts + [prompt]
+
+    # Prepare payload as per Lambda expectation
     payload = {
         "input": {
-            "messages": chat_context
+            "messages": chat_context  # List of strings
         }
     }
+
     # payload = { "input": { "messages": [prompt] } }
 
     try:
