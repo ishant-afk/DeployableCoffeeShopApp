@@ -52,8 +52,20 @@ if prompt := st.chat_input("Type your coffee question here..."):
     st.session_state.chat_history.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
+        
+    chat_context = [
+        {"role": msg["role"], "content": msg["content"]}
+        for msg in st.session_state.chat_history
+        if msg["role"] in ["user", "assistant"]
+    ][-4:]  # Only the last 4 messages
 
-    payload = { "input": { "messages": [prompt] } }
+    # Payload with limited memory context
+    payload = {
+        "input": {
+            "messages": chat_context
+        }
+    }
+    # payload = { "input": { "messages": [prompt] } }
 
     try:
         response = lambda_client.invoke(
